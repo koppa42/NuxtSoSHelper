@@ -1,6 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   devtools: { enabled: true },
+  app: {
+    baseURL: '/NuxtSoSHelper/',
+  },
   modules: [
     '@pinia/nuxt',
   ],
@@ -22,6 +25,6 @@ export default defineNuxtConfig({
           ? ['naive-ui', 'vueuc', 'date-fns-tz/esm/formatInTimeZone']
           : []
     }
-  }
+  },
 }
 )
