@@ -1,21 +1,26 @@
 <template>
+  <NWatermark show content="HIT | SoS: AirRescue" cross fullscreen :font-size="16" :line-height="16" :width="384"
+    :height="384" :x-offset="12" :y-offset="60" :rotate="-15" />
+  <MyMenu />
   <NGrid x-gap="12" :cols="9" layout-shift-disabled>
     <NGridItem span="4" offset="2">
-      <SingleInput @cal-less="handleLess" @cal-more="handleMore"/>
+      <SingleInput @cal-less="handleLess" @cal-more="handleMore" />
     </NGridItem>
     <NGridItem span="3" offset="1">
-      <SingleOutput :show="show" :detail="detail" :distance="distance" :time="time" :fuel="fuel" :percentage="percentage" />
+      <SingleOutput :show="show" :detail="detail" :distance="distance" :time="time" :fuel="fuel"
+        :percentage="percentage" />
     </NGridItem>
   </NGrid>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NGrid, NGridItem, useMessage } from 'naive-ui';
+import { NGrid, NGridItem, useMessage, NWatermark } from 'naive-ui';
 import SingleInput from '@/components/distance/SingleInput.vue';
 import SingleOutput from '@/components/distance/SingleOutput.vue';
 import { usePositionStore } from '@/store/position';
 import { useAircraftStore } from '@/store/aircraft';
+import MyMenu from '@/components/MyMenu.vue';
 
 const show = ref<boolean>(false);
 const detail = ref<boolean>(false);
