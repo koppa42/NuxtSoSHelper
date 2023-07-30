@@ -167,6 +167,7 @@ const handleCalculate = () => {
   let total_fuel = 0
   let total_time = 0
   let total_distance = 0
+  let total_fly_time = 0
   let last_position = positionStore.getByName(data.value[0].name);
   if (last_position === undefined) {
     message.error('无法找到地点数据');
@@ -190,6 +191,8 @@ const handleCalculate = () => {
               longitude: position.longitude,
               latitude: position.latitude
             },
+            flyTime: 0,
+            flyTotalTime: 0,
             doTask: true,
             taskType: '加油保障',
             taskTime: aircraft!.fuel_fill_time,
@@ -202,7 +205,9 @@ const handleCalculate = () => {
             position: {
               longitude: position.longitude,
               latitude: position.latitude
-            }
+            },
+            flyTime: 0,
+            flyTotalTime: 0,
           })
         }
       } else {
@@ -223,6 +228,8 @@ const handleCalculate = () => {
         total_time += time;
         const fuel = time * aircraft!.fuel_consumption_per_unit_time / 3600;
         total_fuel += fuel;
+        const flyTime = time;
+        total_fly_time += flyTime;
         if (data.value[i].doTask) {
           // 执行任务
           let task_time = 0;
@@ -273,6 +280,8 @@ const handleCalculate = () => {
               longitude: position.longitude,
               latitude: position.latitude
             },
+            flyTime: flyTime,
+            flyTotalTime: total_fly_time,
             distance: distance,
             totalDistance: total_distance,
             fuel: fuel,
@@ -284,11 +293,14 @@ const handleCalculate = () => {
             taskTime: task_time,
             taskTotalTime: task_time + total_time,
             taskFuel: airTaskType.includes(data.value[i].taskType!) ? task_time * aircraft!.fuel_consumption_per_unit_time / 3600 : undefined,
-            taskTotalFuel: airTaskType.includes(data.value[i].taskType!) ? task_time * aircraft!.fuel_consumption_per_unit_time / 3600 + total_fuel : undefined
+            taskTotalFuel: airTaskType.includes(data.value[i].taskType!) ? task_time * aircraft!.fuel_consumption_per_unit_time / 3600 + total_fuel : undefined,
+            taskFlyTime: airTaskType.includes(data.value[i].taskType!) ? task_time : undefined,
+            taskTotalFlyTime: airTaskType.includes(data.value[i].taskType!) ? task_time + total_time : undefined,
           })
           total_time += task_time;
           if (airTaskType.includes(data.value[i].taskType!)) {
             total_fuel += task_time * aircraft!.fuel_consumption_per_unit_time / 3600;
+            total_fly_time += task_time;
           }
           if (data.value[i].taskType === '加油保障') {
             total_fuel = 0;
@@ -306,7 +318,9 @@ const handleCalculate = () => {
             fuel: fuel,
             total_fuel: total_fuel,
             time: time,
-            total_time: total_time
+            total_time: total_time,
+            flyTime: flyTime,
+            flyTotalTime: total_fly_time,
           })
         }
       } else {
@@ -318,7 +332,7 @@ const handleCalculate = () => {
             latitude: position.latitude
           },
           distance: distance,
-          totalDistance: total_distance
+          totalDistance: total_distance,
         })
       }
     }
@@ -367,7 +381,7 @@ const showData = ref<DataItem[]>([]);
       @confirm="handleModalSure" />
   </NModal>
   <NModal v-model:show="showResult">
-    <MultipleDisplay :data="showData" :aircraft="aircraftValue" @close="showResult = false"/>
+    <MultipleDisplay :data="showData" :aircraft="aircraftValue" @close="showResult = false" />
   </NModal>
 </template>
 
