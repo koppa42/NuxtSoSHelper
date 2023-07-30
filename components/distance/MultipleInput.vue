@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NCard, NTabs, NTabPane, NSpace, NButton } from 'naive-ui';
+import { NCard, NTabs, NTabPane, NSpace, NButton, NScrollbar } from 'naive-ui';
 import { usePositionStore } from '@/store/position';
 
 const emit = defineEmits<{
@@ -14,12 +14,14 @@ const positionTypeName = ['机场', '集结点', '安置点', '灾区', '医院'
   <NCard title="添加地点">
     <NTabs type="line" animated>
       <NTabPane v-for="(type, index) in positionType" :name="type" :tab="positionTypeName[index]">
-        <NSpace>
-          <NCard v-for="position in positionStore.default.filter((val) => val.type === type)" :key="position.name"
-            :title="position.name" bordered hoverable>
-          <NButton text type="primary" @click="emit('add', position.name)">添加</NButton>
-          </NCard>
-        </NSpace>
+        <NScrollbar style="max-height: 600px;">
+          <NSpace>
+            <NCard v-for="position in positionStore.default.filter((val) => val.type === type)" :key="position.name"
+              :title="position.name" bordered hoverable>
+              <NButton text type="primary" @click="emit('add', position.name)">添加</NButton>
+            </NCard>
+          </NSpace>
+        </NScrollbar>
       </NTabPane>
     </NTabs>
   </NCard>

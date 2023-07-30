@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { NWatermark, NSwitch, SelectGroupOption, NSelect, SelectOption, NModal, useMessage, NButton, useDialog } from 'naive-ui';
+import { NWatermark, NSwitch, SelectGroupOption, NSelect, SelectOption, NModal, useMessage, NButton, useDialog, NButtonGroup, NScrollbar } from 'naive-ui';
 import MyMenu from '@/components/MyMenu.vue';
 import MultipleShow from '@/components/distance/MultipleShow.vue';
 import TaskChoice from '@/components/distance/TaskChoice.vue';
 import MultipleInput from '@/components/distance/MultipleInput.vue';
+import MultipleDisplay, { DataItem } from '@/components/distance/MultipleDisplay.vue';
 import { ref } from 'vue';
-import { TaskType, useAircraftStore } from '@/store/aircraft';
+import { Aircraft, TaskType, useAircraftStore } from '@/store/aircraft';
 import { usePositionStore } from '@/store/position';
 
 type ShowDataItem = {
@@ -15,18 +16,12 @@ type ShowDataItem = {
   value?: number
 }
 
+const airTaskType = ['绞车投放', '吊运', '卸载', '绞车转移', '绞车转运', '取水', '灭火', '侦查搜寻'];
 const message = useMessage();
 const positionStore = usePositionStore();
 const dialog = useDialog();
 
-const data = ref<ShowDataItem[]>([
-  {
-    name: '三门（安置）',
-  },
-  {
-    name: '永嘉（安置）'
-  }
-]);
+const data = ref<ShowDataItem[]>([]);
 const aircraft = ref<string | undefined>(undefined);
 aircraft.value = 'AW169 医疗型';
 
@@ -111,6 +106,8 @@ const handleClear = () => {
 }
 
 const showModal = ref<boolean>(false);
+const showResult = ref<boolean>(false);
+
 
 const currentPosIndex = ref<number>(0);
 const currentPosition = ref<string | undefined>(undefined);
@@ -152,6 +149,186 @@ const handleAdd = (name: string) => {
     name
   });
 }
+
+const handleCalculate = () => {
+  showData.value = []
+  if (data.value.length === 0) return;
+
+  const detail = showDetail.value && aircraftValue.value !== undefined;
+  let aircraft: Aircraft | undefined = undefined;
+  if (detail) {
+    aircraft = aircraftStore.getByName(aircraftValue.value as string)
+    if (aircraft === undefined) {
+      message.error('无法找到飞机数据');
+      return;
+    }
+  }
+
+  let total_fuel = 0
+  let total_time = 0
+  let total_distance = 0
+  let last_position = positionStore.getByName(data.value[0].name);
+  if (last_position === undefined) {
+    message.error('无法找到地点数据');
+    return;
+  }
+
+  for (let i = 0; i < data.value.length; i++) {
+    const position = positionStore.getByName(data.value[i].name);
+    if (position === undefined) {
+      message.error('无法找到地点数据');
+      return;
+    }
+    if (i === 0) {
+      // 第一个地点
+      if (detail) {
+        // 是否执行任务
+        if (data.value[0].doTask === true) {
+          showData.value.push({
+            name: position.name,
+            position: {
+              longitude: position.longitude,
+              latitude: position.latitude
+            },
+            doTask: true,
+            taskType: '加油保障',
+            taskTime: aircraft!.fuel_fill_time,
+            taskTotalTime: aircraft!.fuel_fill_time,
+          })
+          total_time += aircraft!.fuel_fill_time;
+        } else {
+          showData.value.push({
+            name: position.name,
+            position: {
+              longitude: position.longitude,
+              latitude: position.latitude
+            }
+          })
+        }
+      } else {
+        showData.value.push({
+          name: position.name,
+          position: {
+            longitude: position.longitude,
+            latitude: position.latitude
+          }
+        })
+      }
+    } else {
+      // 其他地点
+      const distance = calDistance(last_position.longitude, last_position.latitude, position.longitude, position.latitude);
+      if (detail) {
+        total_distance += distance;
+        const time = distance / aircraft!.cruising_speed * 3600;
+        total_time += time;
+        const fuel = time * aircraft!.fuel_consumption_per_unit_time / 3600;
+        total_fuel += fuel;
+        if (data.value[i].doTask) {
+          // 执行任务
+          let task_time = 0;
+          switch (data.value[i].taskType) {
+            case '装载':
+            case '卸货':
+              task_time = aircraft!.supply_load_time * data.value[i].value!;
+              break;
+            case '运送':
+            case '投放':
+            case '转移':
+            case '安置':
+              task_time = aircraft!.person_on_off_time * data.value[i].value!;
+              break;
+            case '绞车投放':
+            case '绞车转移':
+              task_time = aircraft!.winch_person_time * data.value[i].value!;
+              break;
+            case '吊运':
+            case '卸载':
+              task_time = aircraft!.device_load_time * data.value[i].value!;
+              break;
+            case '转运':
+            case '交接':
+              task_time = aircraft!.patient_on_off_time * data.value[i].value!;
+              break;
+            case '绞车转运':
+              task_time = aircraft!.winch_patient_time * data.value[i].value!;
+              break;
+            case '取水':
+              task_time = aircraft!.water_load_time / (aircraft!.max_external_load / 1000) * data.value[i].value!;
+              break;
+            case '灭火':
+              task_time = aircraft!.extinguishing_time / (aircraft!.max_external_load / 1000) * data.value[i].value!;
+              break;
+            case '加油保障':
+              task_time = aircraft!.fuel_fill_time;
+              break;
+            case '侦查搜寻':
+              task_time = aircraft!.search_time * data.value[i].value!;
+              break;
+            default:
+              return 0;
+          }
+          showData.value.push({
+            name: position.name,
+            position: {
+              longitude: position.longitude,
+              latitude: position.latitude
+            },
+            distance: distance,
+            totalDistance: total_distance,
+            fuel: fuel,
+            total_fuel: total_fuel,
+            time: time,
+            total_time: total_time,
+            doTask: true,
+            taskType: data.value[i].taskType as TaskType,
+            taskTime: task_time,
+            taskTotalTime: task_time + total_time,
+            taskFuel: airTaskType.includes(data.value[i].taskType!) ? task_time * aircraft!.fuel_consumption_per_unit_time / 3600 : undefined,
+            taskTotalFuel: airTaskType.includes(data.value[i].taskType!) ? task_time * aircraft!.fuel_consumption_per_unit_time / 3600 + total_fuel : undefined
+          })
+          total_time += task_time;
+          if (airTaskType.includes(data.value[i].taskType!)) {
+            total_fuel += task_time * aircraft!.fuel_consumption_per_unit_time / 3600;
+          }
+          if (data.value[i].taskType === '加油保障') {
+            total_fuel = 0;
+          }
+        } else {
+          // 不执行任务
+          showData.value.push({
+            name: position.name,
+            position: {
+              longitude: position.longitude,
+              latitude: position.latitude
+            },
+            distance: distance,
+            totalDistance: total_distance,
+            fuel: fuel,
+            total_fuel: total_fuel,
+            time: time,
+            total_time: total_time
+          })
+        }
+      } else {
+        total_distance += distance;
+        showData.value.push({
+          name: position.name,
+          position: {
+            longitude: position.longitude,
+            latitude: position.latitude
+          },
+          distance: distance,
+          totalDistance: total_distance
+        })
+      }
+    }
+    last_position = position;
+  }
+
+  showResult.value = true;
+}
+
+const showData = ref<DataItem[]>([]);
 </script>
 
 <template>
@@ -169,7 +346,10 @@ const handleAdd = (name: string) => {
               <NSelect v-if="showDetail" :options="aircraftOptions" v-model:value="aircraftValue" placeholder="请选择飞机类型" />
             </div>
             <div>
-              <NButton type="error" @click="handleClear">清空</NButton>
+              <NButtonGroup>
+                <NButton type="primary" @click="handleCalculate">计算</NButton>
+                <NButton type="error" @click="handleClear">清空</NButton>
+              </NButtonGroup>
             </div>
           </div>
           <MultipleShow :position="data" :aircraft="aircraft" @item-up="handleUp" @item-down="handleDown"
@@ -185,6 +365,9 @@ const handleAdd = (name: string) => {
   <NModal v-model:show="showModal" :mask-closable="false">
     <TaskChoice :aircraft="aircraftValue" :position="currentPosition" @close="showModal = false;"
       @confirm="handleModalSure" />
+  </NModal>
+  <NModal v-model:show="showResult">
+    <MultipleDisplay :data="showData" :aircraft="aircraftValue" @close="showResult = false"/>
   </NModal>
 </template>
 

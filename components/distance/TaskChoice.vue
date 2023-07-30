@@ -101,6 +101,8 @@ const dataTip = computed(() => {
     case '取水':
     case '灭火':
       return '请输入水量 (1000 kg)：';
+    case '侦查搜寻':
+      return '请输入搜寻范围 (km²)：'
     default:
       return '请输入数据：'
   }
@@ -142,6 +144,8 @@ const valueMax = computed(() => {
     case '取水':
     case '灭火':
       return aircraft.max_external_load / 10000;
+    case '侦查搜寻':
+      return 10000;
     default:
       return 0;
   }
