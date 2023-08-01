@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { NWatermark, NSwitch, SelectGroupOption, NSelect, SelectOption, NModal, useMessage, NButton, useDialog, NButtonGroup, NScrollbar } from 'naive-ui';
+import { NWatermark, NSwitch, SelectGroupOption, NSelect, SelectOption, NModal, useMessage, NButton, useDialog, NButtonGroup, NIcon, NDrawer, NDrawerContent } from 'naive-ui';
 import MyMenu from '@/components/MyMenu.vue';
 import MultipleShow from '@/components/distance/MultipleShow.vue';
 import TaskChoice from '@/components/distance/TaskChoice.vue';
 import MultipleInput from '@/components/distance/MultipleInput.vue';
 import MultipleDisplay, { DataItem } from '@/components/distance/MultipleDisplay.vue';
+import MultipleHistory, { HistoryItem } from '@/components/distance/MultipleHistory.vue';
 import { ref } from 'vue';
 import { Aircraft, TaskType, useAircraftStore } from '@/store/aircraft';
 import { usePositionStore } from '@/store/position';
+import { HourglassOutline } from '@vicons/ionicons5';
+import { useStorage } from '@vueuse/core';
 
-type ShowDataItem = {
+export interface ShowDataItem {
   name: string,
   doTask?: boolean,
   taskType?: TaskType,
@@ -343,6 +346,36 @@ const handleCalculate = () => {
 }
 
 const showData = ref<DataItem[]>([]);
+
+const showHistory = ref<boolean>(false);
+const history = useStorage<HistoryItem[]>('history', []);
+
+const handleHistoryView = (index: number) => {
+  data.value = [];
+
+  showDetail.value = history.value[index].aircraft ? true : false;
+  aircraftValue.value = history.value[index].aircraft;
+  data.value = history.value[index].data;
+}
+const handleHistoryDelete = (index: number) => {
+  history.value.splice(index, 1);
+}
+const handleHistorySave = (name?: string) => {
+  if (data.value.length === 0) {
+    dialog.error({
+      title: '错误',
+      content: '不能保存空的记录'
+    })
+    return;
+  } else {
+    history.value.push({
+      time: new Date().toLocaleString(),
+      aircraft: showDetail.value ? aircraftValue.value : undefined,
+      name: name,
+      data: data.value,
+    })
+  }
+}
 </script>
 
 <template>
@@ -361,6 +394,13 @@ const showData = ref<DataItem[]>([]);
             </div>
             <div>
               <NButtonGroup>
+                <NButton type="primary" @click="showHistory = true;">
+                  <template #icon>
+                    <NIcon>
+                      <HourglassOutline />
+                    </NIcon>
+                  </template>
+                </NButton>
                 <NButton type="primary" @click="handleCalculate">计算</NButton>
                 <NButton type="error" @click="handleClear">清空</NButton>
               </NButtonGroup>
@@ -383,6 +423,12 @@ const showData = ref<DataItem[]>([]);
   <NModal v-model:show="showResult">
     <MultipleDisplay :data="showData" :aircraft="aircraftValue" @close="showResult = false" />
   </NModal>
+  <NDrawer v-model:show="showHistory" placement="right" style="width: 40%;">
+    <NDrawerContent title="计算历史">
+      <MultipleHistory :data="history" @view="handleHistoryView" @save="handleHistorySave"
+        @delete="handleHistoryDelete" />
+    </NDrawerContent>
+  </NDrawer>
 </template>
 
 <style scoped>
@@ -416,6 +462,6 @@ const showData = ref<DataItem[]>([]);
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 </style>

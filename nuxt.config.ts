@@ -5,7 +5,7 @@ export default defineNuxtConfig({
     baseURL: '/NuxtSoSHelper/',
   },
   modules: [
-    '@pinia/nuxt',
+    '@pinia/nuxt', '@vueuse/nuxt'
   ],
   build: {
     transpile:

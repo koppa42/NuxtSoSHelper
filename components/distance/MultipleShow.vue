@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NList, NListItem, NThing, NButtonGroup, NButton, NIcon, useMessage, NTag, NSpace, NScrollbar } from 'naive-ui';
+import { NList, NListItem, NThing, NButtonGroup, NButton, NIcon, useMessage, NTag, NSpace, NScrollbar, NEmpty } from 'naive-ui';
 import { TaskType } from '@/store/aircraft';
 import { ArrowUp, ArrowDown, TrashOutline } from '@vicons/ionicons5';
 
@@ -70,19 +70,25 @@ const dataSuffix = (task?: string) => {
       return '人';
     case '取水':
     case '灭火':
-      return 't';
+      return '1000 kg';
     default:
       return undefined;
   }
 }
+
+const isEmpty = computed(() => props.position.length === 0);
 </script>
 
 <template>
-  <NList hoverable clickable bordered>
+  <NSpace v-if="isEmpty" align="center" justify="center" style="height: 440px;">
+    <NEmpty description="暂无地点数据"/>
+  </NSpace>
+  <NList v-else hoverable clickable bordered>
     <template #header>
       <NThing title="途径地点">
       </NThing>
     </template>
+
     <NScrollbar style="max-height: 740px;">
       <NListItem v-for="(pos, index) in props.position">
         <template #prefix>

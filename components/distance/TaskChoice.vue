@@ -143,7 +143,7 @@ const valueMax = computed(() => {
       return aircraft.max_capacity;
     case '取水':
     case '灭火':
-      return aircraft.max_external_load / 10000;
+      return aircraft.max_external_load / 1000;
     case '侦查搜寻':
       return 10000;
     default:

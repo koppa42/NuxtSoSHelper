@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { h } from 'vue';
-import { NCard, NDataTable, DataTableColumn, NTag, NButton, NScrollbar, DataTableCreateSummary } from 'naive-ui';
-import { AirTaskType, Aircraft, LandTaskType, TaskType, useAircraftStore } from '@/store/aircraft';
-import { RowData } from 'naive-ui/es/data-table/src/interface';
+import { NCard, NDataTable, DataTableColumn, NTag, NButton } from 'naive-ui';
+import { AirTaskType, LandTaskType, useAircraftStore } from '@/store/aircraft';
 import { AircraftCost } from '@/utils/aircraftCost';
 
 const emit = defineEmits<{
@@ -311,6 +310,13 @@ const columns = computed((): DataTableColumn[] => {
 <template>
   <NCard title="计算结果">
     <div class="tright">
+      <!-- <NButton circle @click="generatePDF()">
+        <template #icon>
+          <NIcon>
+            <DownloadOutline />
+          </NIcon>
+        </template>
+      </NButton> -->
       <NButton type="primary" @click="emit('close')">确认</NButton>
     </div>
     <NDataTable :columns="columns" :data="props.data" :single-line="false" :pagination="{ pageSize: 10 }" virtual-scroll
@@ -324,6 +330,9 @@ const columns = computed((): DataTableColumn[] => {
 }
 
 .tright {
+  /* display: flex;
+  flex-direction: row;
+  justify-content: space-between; */
   text-align: right;
   margin-bottom: 10px;
 }
