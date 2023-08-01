@@ -70,7 +70,7 @@ const dataSuffix = (task?: string) => {
       return '人';
     case '取水':
     case '灭火':
-      return '1000 kg';
+      return 't';
     default:
       return undefined;
   }

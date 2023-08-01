@@ -13,6 +13,13 @@ import MyMenu from '@/components/MyMenu.vue';
         <NListItem>
           <NThing title="2023-8-2">
             <NUl>
+              <NLi>更改取水和灭火标签显示的单位</NLi>
+            </NUl>
+          </NThing>
+        </NListItem>
+        <NListItem>
+          <NThing title="2023-8-2">
+            <NUl>
               <NLi>连续距离计算结果历史记录</NLi>
               <NLi>修复灭火和取水计算错误</NLi>
             </NUl>
