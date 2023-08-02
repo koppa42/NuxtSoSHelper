@@ -81,8 +81,9 @@ const isEmpty = computed(() => props.position.length === 0);
 
 <template>
   <NSpace v-if="isEmpty" align="center" justify="center" style="height: 440px;">
-    <NEmpty description="暂无地点数据"/>
+    <NEmpty description="暂无地点数据" />
   </NSpace>
+
   <NList v-else hoverable clickable bordered>
     <template #header>
       <NThing title="途径地点">

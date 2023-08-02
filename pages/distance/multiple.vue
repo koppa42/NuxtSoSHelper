@@ -9,7 +9,7 @@ import MultipleHistory, { HistoryItem } from '@/components/distance/MultipleHist
 import { ref } from 'vue';
 import { Aircraft, TaskType, useAircraftStore } from '@/store/aircraft';
 import { usePositionStore } from '@/store/position';
-import { HourglassOutline } from '@vicons/ionicons5';
+import { HourglassOutline, CalculatorOutline, TrashBinOutline } from '@vicons/ionicons5';
 import { useStorage } from '@vueuse/core';
 
 export interface ShowDataItem {
@@ -400,9 +400,24 @@ const handleHistorySave = (name?: string) => {
                       <HourglassOutline />
                     </NIcon>
                   </template>
+                  历史
                 </NButton>
-                <NButton type="primary" @click="handleCalculate">计算</NButton>
-                <NButton type="error" @click="handleClear">清空</NButton>
+                <NButton type="primary" @click="handleCalculate">
+                  <template #icon>
+                    <NIcon>
+                      <CalculatorOutline />
+                    </NIcon>
+                  </template>
+                  计算
+                </NButton>
+                <NButton type="error" @click="handleClear">
+                  <template #icon>
+                    <NIcon>
+                      <TrashBinOutline />
+                    </NIcon>
+                  </template>
+                  清空
+                </NButton>
               </NButtonGroup>
             </div>
           </div>
@@ -421,7 +436,7 @@ const handleHistorySave = (name?: string) => {
       @confirm="handleModalSure" />
   </NModal>
   <NModal v-model:show="showResult">
-    <MultipleDisplay :data="showData" :aircraft="aircraftValue" @close="showResult = false" />
+    <MultipleDisplay :data="showData" :aircraft="aircraftValue" @close="showResult = false" :show-detail="showDetail" />
   </NModal>
   <NDrawer v-model:show="showHistory" placement="right" style="width: 40%;">
     <NDrawerContent title="计算历史">

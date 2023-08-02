@@ -13,6 +13,15 @@ import MyMenu from '@/components/MyMenu.vue';
         <NListItem>
           <NThing title="2023-8-2">
             <NUl>
+              <NLi>修复在连续距离计算中选择飞机类型，然后关闭详细计算，数据展示界面表格仍然为详细计算类型样式的 bug</NLi>
+              <NLi>更改 Menu 样式</NLi>
+              <NLi>部分按钮增加图标</NLi>
+            </NUl>
+          </NThing>
+        </NListItem>
+        <NListItem>
+          <NThing title="2023-8-2">
+            <NUl>
               <NLi>更改取水和灭火标签显示的单位</NLi>
             </NUl>
           </NThing>

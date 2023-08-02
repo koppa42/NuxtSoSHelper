@@ -15,7 +15,6 @@ interface DataItemBase {
     longitude: number,
     latitude: number
   },
-
 }
 
 interface DataItemExtendDistance {
@@ -62,7 +61,8 @@ export type DataItem = DataItemStarter | DataItemItem;
 
 const props = defineProps<{
   data: DataItem[],
-  aircraft?: string
+  aircraft?: string,
+  showDetail?: boolean
 }>();
 
 const aircraft = computed(() => {
@@ -74,7 +74,7 @@ const aircraft = computed(() => {
 })
 
 const columns = computed((): DataTableColumn[] => {
-  if (props.aircraft === undefined && aircraft.value === undefined) {
+  if (!props.showDetail || (props.aircraft === undefined && aircraft.value === undefined)) {
     return [
       {
         title: "序号",
