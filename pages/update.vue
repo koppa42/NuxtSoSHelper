@@ -11,6 +11,13 @@ import MyMenu from '@/components/MyMenu.vue';
     <NCard  style="width: 600px;">
       <NList>
         <NListItem>
+          <NThing title="2023-8-4">
+            <NUl>
+              <NLi>航空器选择生成器</NLi>
+            </NUl>
+          </NThing>
+        </NListItem>
+        <NListItem>
           <NThing title="2023-8-2">
             <NUl>
               <NLi>修复在连续距离计算中选择飞机类型，然后关闭详细计算，数据展示界面表格仍然为详细计算类型样式的 bug</NLi>

@@ -3,7 +3,7 @@ import { NMenu, NIcon } from 'naive-ui';
 import type { MenuOption } from 'naive-ui';
 import { h, ref } from 'vue';
 import { useRouter, RouterLink } from 'vue-router';
-import { PaperPlaneOutline, BookmarkOutline, RepeatOutline, ReturnUpForwardOutline } from '@vicons/ionicons5';
+import { PaperPlaneOutline, BookmarkOutline, RepeatOutline, ReturnUpForwardOutline, DiceOutline } from '@vicons/ionicons5';
 
 function renderIcon(icon: Component) {
   return () => h(NIcon, null, { default: () => h(icon) })
@@ -30,6 +30,18 @@ const menuOptions: MenuOption[] = [
         key: '/distance/multiple',
         icon: renderIcon(RepeatOutline)
       },
+    ]
+  },
+  {
+    label: '生成器',
+    key: '/generator',
+    icon: renderIcon(DiceOutline),
+    children: [
+      {
+        label: () => h(RouterLink, { to: '/generator/aircraft' }, { default: () => '航空器生成' }),
+        key: '/generator/aircraft',
+        icon: renderIcon(PaperPlaneOutline)
+      }
     ]
   },
   {
