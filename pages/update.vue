@@ -13,6 +13,14 @@ import MyMenu from '@/components/MyMenu.vue';
         <NListItem>
           <NThing title="2023-8-4">
             <NUl>
+              <NLi>修复航空器选择生成器添加按钮逻辑异常</NLi>
+              <NLi>航空器选择生成器页面增加当前金额显示</NLi>
+            </NUl>
+          </NThing>
+        </NListItem>
+        <NListItem>
+          <NThing title="2023-8-4">
+            <NUl>
               <NLi>航空器选择生成器</NLi>
             </NUl>
           </NThing>

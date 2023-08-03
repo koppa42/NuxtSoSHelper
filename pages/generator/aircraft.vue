@@ -79,6 +79,7 @@ const generate = () => {
       leftMoney -= aircraft.price;
     }
   }
+  now.value = value.value.reduce((prev, cur) => prev + cur.price, 0);
 }
 
 const handleRandom = () => {
@@ -132,11 +133,12 @@ const handleSiwtch = (val: number | null) => {
           开始生成
         </NButton>
         <span style="margin-right: 16px; margin-left: 16px;">总预算</span>
-        <NInputNumber v-model:value="total" :min="0" style="display: inline-block;" :clearable="false"
+        <NInputNumber v-model:value="total" :min="0" style="display: inline-block; width: 200px;" :clearable="false"
           :on-update:value="(val) => handleSiwtch(val)">
           <template #prefix>¥</template>
           <template #suffix>亿</template>
         </NInputNumber>
+        <sapn style="margin-left: 16px;">当前金额：{{ now.toFixed(2) }} 亿</sapn>
         <AircraftList :aircraft-list="value" style="margin-top: 16px;" @delete="handleDelete" @lock="handleLock" />
       </div>
       <div class="rbox">
