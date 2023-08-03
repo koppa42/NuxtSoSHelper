@@ -134,7 +134,7 @@ const handleSiwtch = (val: number | null) => {
         </NButton>
         <span style="margin-right: 16px; margin-left: 16px;">总预算</span>
         <NInputNumber v-model:value="total" :min="0" style="display: inline-block; width: 200px;" :clearable="false"
-          :on-update:value="(val) => handleSiwtch(val)">
+          :on-update:value="(val) => handleSiwtch(val)" :precision="2">
           <template #prefix>¥</template>
           <template #suffix>亿</template>
         </NInputNumber>
