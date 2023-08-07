@@ -14,6 +14,13 @@ import MyMenu from '@/components/MyMenu.vue';
           <NListItem>
             <NThing title="2023-8-7">
               <NUl>
+                <NLi>校赛位置信息变更</NLi>
+              </NUl>
+            </NThing>
+          </NListItem>
+          <NListItem>
+            <NThing title="2023-8-7">
+              <NUl>
                 <NLi>更新页面优化</NLi>
                 <NLi>浮点数显示优化</NLi>
                 <NLi>更改地点“三门”类型</NLi>
