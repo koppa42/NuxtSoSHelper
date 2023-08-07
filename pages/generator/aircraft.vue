@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NWatermark, NCard, NInputNumber, NThing, useDialog, NButton } from 'naive-ui';
-import { useAircraftStore } from '@/store/aircraft';
+import { Aircraft, useAircraftStore } from '@/store/aircraft';
 import MyMenu from '@/components/MyMenu.vue';
 import AircraftInput from '@/components/generator/AircraftInput.vue';
 import AircraftList, { AircraftItem } from '@/components/generator/AircraftList.vue';
@@ -54,6 +54,31 @@ const handleLock = (idx: number) => {
   value.value[idx].locked = !value.value[idx].locked;
 }
 
+// const generateAll = () => {
+//   let leftMoney = total.value;
+//   const allAircraft = aircraftStore.default;
+  
+//   const generateUnit = (leftMoney: number): number => {
+//     const allowAircrafts = allAircraft.filter((val) => val.price <= leftMoney);
+//     if (allowAircrafts.length <= 0) {
+//       return 0;
+//     } else {
+//       let total = 0;
+//       for (let i = 0; i <= allowAircrafts.length - 1; i++) {
+//         let ret = generateUnit(leftMoney - allowAircrafts[i].price);
+//         if (ret === 0) {
+//           total += 1;
+//         } else {
+//           total += ret;
+//         }
+//       }
+//       return total;
+//     }
+//   }
+
+//   return generateUnit(leftMoney);
+// }
+
 const generate = () => {
   // 删除未锁定的所有飞机
   value.value = value.value.filter((val) => val.locked);
@@ -90,6 +115,7 @@ const handleRandom = () => {
     negativeText: "取消",
     onPositiveClick: () => {
       generate();
+      // console.log(generateAll());
     },
     onNegativeClick: () => { }
   })
@@ -138,7 +164,7 @@ const handleSiwtch = (val: number | null) => {
           <template #prefix>¥</template>
           <template #suffix>亿</template>
         </NInputNumber>
-        <sapn style="margin-left: 16px;">当前金额：{{ now.toFixed(2) }} 亿</sapn>
+        <span style="margin-left: 16px;">当前金额：{{ now.toFixed(2) }} 亿</span>
         <AircraftList :aircraft-list="value" style="margin-top: 16px;" @delete="handleDelete" @lock="handleLock" />
       </div>
       <div class="rbox">

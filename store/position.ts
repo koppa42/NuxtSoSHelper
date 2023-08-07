@@ -21,7 +21,7 @@ export const usePositionStore = defineStore('position', {
       { name: '永康（集结）', type: "Source", longitude: 120.04, latitude: 28.89, location: "Land" },
       { name: '东阳（集结）', type: "Source", longitude: 120.25, latitude: 29.27, location: "Land" },
       { name: '新昌（集结）', type: "Source", longitude: 120.9, latitude: 29.51, location: "Land" },
-      { name: '三门（安置）', type: "Destination", longitude: 121.37, latitude: 29.06, location: "Land" },
+      // { name: '三门（安置）', type: "Destination", longitude: 121.37, latitude: 29.06, location: "Land" },
       { name: '救捞船（安置）', type: "Destination", longitude: 122.22, latitude: 28.39, location: "Land" },
       { name: '缙云（灾区）', type: "DisasterArea", longitude: 120.16, latitude: 28.72, location: "Land" },
       { name: '山早（灾区）', type: "DisasterArea", longitude: 120.67, latitude: 28.53, location: "Land" },
@@ -32,6 +32,7 @@ export const usePositionStore = defineStore('position', {
       { name: '失事渔船（事故）', type: "DisasterArea", longitude: 121.78, latitude: 28.86, location: "Sea" },
       { name: '侧翻游轮（事故）', type: "DisasterArea", longitude: 122.0, latitude: 28.75, location: "Sea" },
       { name: '高危平台（事故）', type: "DisasterArea", longitude: 123.1, latitude: 28.41, location: "Sea" },
+      { name: '三门（灾区）', type: "DisasterArea", longitude: 121.37, latitude: 29.06, location: "Land" },
     ]
   }),
   actions: {

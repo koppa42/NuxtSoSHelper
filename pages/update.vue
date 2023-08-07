@@ -12,10 +12,11 @@ import MyMenu from '@/components/MyMenu.vue';
       <NScrollbar style="max-height: 600px; height: 100%;">
         <NList>
           <NListItem>
-            <NThing title="2023-8-x">
+            <NThing title="2023-8-7">
               <NUl>
                 <NLi>更新页面优化</NLi>
                 <NLi>浮点数显示优化</NLi>
+                <NLi>更改地点“三门”类型</NLi>
               </NUl>
             </NThing>
           </NListItem>
