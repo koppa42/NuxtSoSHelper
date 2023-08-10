@@ -3,7 +3,7 @@ import { NMenu, NIcon } from 'naive-ui';
 import type { MenuOption } from 'naive-ui';
 import { h, ref } from 'vue';
 import { useRouter, RouterLink } from 'vue-router';
-import { PaperPlaneOutline, BookmarkOutline, RepeatOutline, ReturnUpForwardOutline, DiceOutline } from '@vicons/ionicons5';
+import { PaperPlaneOutline, BookmarkOutline, RepeatOutline, ReturnUpForwardOutline, DiceOutline, AirplaneOutline } from '@vicons/ionicons5';
 
 function renderIcon(icon: Component) {
   return () => h(NIcon, null, { default: () => h(icon) })
@@ -31,6 +31,11 @@ const menuOptions: MenuOption[] = [
         icon: renderIcon(RepeatOutline)
       },
     ]
+  },
+  {
+    key: '/aircraft/serial',
+    icon: renderIcon(AirplaneOutline),
+    label: () => h(RouterLink, { to: '/aircraft/serial' }, { default: () => '航空器优先计算' }),
   },
   {
     label: '生成器',

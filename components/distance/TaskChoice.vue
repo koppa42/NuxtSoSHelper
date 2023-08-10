@@ -193,7 +193,7 @@ const dataSuffix = computed(() => {
       </div>
       <div class="mbox" v-if="showData">
         <div style="margin-bottom: 8px;">
-          <sapn>{{ dataTip }}</sapn>
+          <span>{{ dataTip }}</span>
           <NButton quaternary type="info" @click="taskValue = valueMax">最大</NButton>
         </div>
         <NInputNumber placeholder="请输入数据" style="width: 50%;" :min="0" :max="valueMax" v-model:value="taskValue">
