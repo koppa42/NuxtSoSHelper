@@ -3,7 +3,7 @@ import { NTree, TreeOption, NDropdown, NDivider } from 'naive-ui';
 import { useEditorStore, EditorAircraftMoveTo } from '@/store/editor';
 
 const editorStore = useEditorStore();
-
+const optionsRef = ref<string | undefined>(undefined)
 
 const moveTo2String = (val: string | EditorAircraftMoveTo): string => {
   if (typeof val === 'string') {
@@ -56,7 +56,14 @@ const data = computed(() => {
 const showDropdown = ref(false);
 const dropdownX = ref(0);
 const dropdownY = ref(0);
-const dropdownSelect = (cmd: string) => {
+const dropdownSelect = (cmd: string, ...x: any) => {
+  if (cmd === 'here') {
+    if (optionsRef.value === undefined) {
+      editorStore.SetTimelineMove(editorStore.currentAircraftUuid!, null);
+    } else {
+      editorStore.SetTimelineMove(editorStore.currentAircraftUuid!, optionsRef.value);
+    }
+  }
   showDropdown.value = false;
 }
 const dropdownClickOutside = () => {
@@ -72,6 +79,7 @@ const nodeProps = ({ option }: { option: TreeOption }) => {
       showDropdown.value = true;
       dropdownX.value = e.clientX;
       dropdownY.value = e.clientY;
+      optionsRef.value = (option.key as string)?.split(',')[0];
     }
   }
 }

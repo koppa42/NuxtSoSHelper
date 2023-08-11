@@ -12,6 +12,13 @@ import MyMenu from '@/components/MyMenu.vue';
       <NScrollbar style="max-height: 600px; height: 100%;">
         <NList>
           <NListItem>
+            <NThing title="2023-8-11">
+              <NUl>
+                <NLi>添加航空器优先计算页面</NLi>
+              </NUl>
+            </NThing>
+          </NListItem>
+          <NListItem>
             <NThing title="2023-8-7">
               <NUl>
                 <NLi>校赛位置信息变更</NLi>

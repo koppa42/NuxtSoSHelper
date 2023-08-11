@@ -1,6 +1,9 @@
-import { EditorAircraftStatus, EditorAircraftMoveStatus } from '@/store/editor'
+import { EditorAircraftStatus, EditorAircraftMoveStatus, EditorAircraftMoveTo } from '@/store/editor'
 import { Aircraft } from '@/store/aircraft';
 import { usePositionStore } from '@/store/position';
+import { AircraftCost } from '@/utils/aircraftCost';
+
+const airTaskTypes = ['绞车投放', '吊运', '卸载', '绞车转移', '绞车转运', '取水', '灭火', '侦查搜寻'];
 
 export namespace MoveHelper {
   export function CheckMoveValid(aircraft: Aircraft, move: EditorAircraftMoveStatus[]): [true, EditorAircraftStatus] | [false, string, string] {
@@ -204,6 +207,145 @@ export namespace MoveHelper {
       idx++;
     }
     return [true, status]
+  }
+
+  export interface MoveResult {
+    totalUsedTime: number,
+    totalFlyTime: number,
+    totalUsedFuel: number,
+    totalUsefFuelPercentage: number,
+    leftFuel: number,
+    leftFuelPercentage: number,
+    totalCost: number
+  }
+
+
+  export function CalculateMoveResult(aircraft: Aircraft, moves: EditorAircraftMoveStatus[]): MoveResult {
+    const positionStore = usePositionStore();
+
+    let usedTime = 0, flyTime = 0, usedFuel = 0, leftFuel = 0;
+    let idx = 0;
+    for (const m of moves) {
+      // 飞行
+      if (idx === 0) {
+        // 无需飞行
+        // pass
+      } else {
+        const from = moves[idx - 1].to
+        const to = m.to;
+        let fromPosition: EditorAircraftMoveTo = { longitude: 0, latitude: 0 }, toPosition: EditorAircraftMoveTo = { longitude: 0, latitude: 0 };
+        if (typeof from === 'string') {
+          const p = positionStore.getByName(from);
+          if (p === undefined) {
+            throw new Error(`找不到位置 ${from}`);
+          }
+          fromPosition = p;
+        } else {
+          fromPosition = from;
+        }
+        if (typeof to === 'string') {
+          const p = positionStore.getByName(to);
+          if (p === undefined) {
+            throw new Error(`找不到位置 ${to}`);
+          }
+          toPosition = p;
+        } else {
+          toPosition = to;
+        }
+
+        const distance = calDistance(fromPosition.longitude, fromPosition.latitude, toPosition.longitude, toPosition.latitude);
+        const moveTime = distance / aircraft.cruising_speed;
+        const consumeFuel = aircraft.fuel_consumption_per_unit_time * moveTime;
+        usedTime += moveTime * 3600;
+        flyTime += moveTime * 3600;
+        leftFuel -= consumeFuel;
+        usedFuel += consumeFuel;
+      }
+
+      // 任务
+      if (m.do_task) {
+        let task_time = 0;
+        switch (m.task_type) {
+          case '装载':
+          case '卸货':
+            task_time = aircraft!.supply_load_time * m.task_addition!;
+            break;
+          case '运送':
+          case '投放':
+          case '转移':
+          case '安置':
+            task_time = aircraft!.person_on_off_time * m.task_addition!;
+            break;
+          case '绞车投放':
+          case '绞车转移':
+            task_time = aircraft!.winch_person_time * m.task_addition!;
+            break;
+          case '吊运':
+          case '卸载':
+            task_time = aircraft!.device_load_time * m.task_addition!;
+            break;
+          case '转运':
+          case '交接':
+            task_time = aircraft!.patient_on_off_time * m.task_addition!;
+            break;
+          case '绞车转运':
+            task_time = aircraft!.winch_patient_time * m.task_addition!;
+            break;
+          case '取水':
+            task_time = aircraft!.water_load_time / (aircraft!.max_external_load / 1000) * m.task_addition!;
+            break;
+          case '灭火':
+            task_time = aircraft!.extinguishing_time / (aircraft!.max_external_load / 1000) * m.task_addition!;
+            break;
+          case '加油保障':
+            task_time = aircraft!.fuel_fill_time;
+            break;
+          case '侦查搜寻':
+            task_time = aircraft!.search_time * m.task_addition!;
+            break;
+          default:
+            break;
+        }
+
+        if (m.task_type === '加油保障') {
+          leftFuel = aircraft!.max_fuel;
+        } else {
+          if (airTaskTypes.includes(m.task_type!)) {
+            flyTime += task_time;
+            leftFuel -= aircraft!.fuel_consumption_per_unit_time * task_time / 3600;
+            usedFuel += aircraft!.fuel_consumption_per_unit_time * task_time / 3600;
+          }
+        }
+
+        usedTime += task_time;
+      }
+
+      // 等待
+      if (m.do_wait) {
+        let wait_time = 0;
+        if (m.do_task && !airTaskTypes.includes(m.task_type!)) {
+          // pass
+        } else {
+          wait_time = m.wait_time!;
+          leftFuel -= aircraft!.fuel_consumption_per_unit_time * wait_time / 3600;
+          flyTime += wait_time;
+          usedTime += wait_time;
+          usedFuel += aircraft!.fuel_consumption_per_unit_time * wait_time / 3600;
+        }
+      }
+
+      idx++;
+    }
+
+    return {
+      totalUsedTime: usedTime,
+      totalFlyTime: flyTime,
+      totalUsedFuel: usedFuel,
+      totalUsefFuelPercentage: usedFuel / aircraft!.max_fuel * 100,
+      leftFuel: leftFuel,
+      leftFuelPercentage: leftFuel / aircraft!.max_fuel * 100,
+      totalCost: flyTime * AircraftCost.Total(aircraft!) / 3600,
+    }
   }
 
   export function DeleteMoveTask(...moves: EditorAircraftMoveStatus[]) {

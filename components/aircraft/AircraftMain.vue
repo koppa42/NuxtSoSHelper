@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import AircraftTask from '@/components/aircraft/AircraftTask.vue';
+import AircraftResult from '@/components/aircraft/AircraftResult.vue';
 </script>
 
 <template>
   <div class="m-main">
     <AircraftTask />
+    <AircraftResult />
   </div>
 </template>
 
@@ -15,5 +17,6 @@ import AircraftTask from '@/components/aircraft/AircraftTask.vue';
 
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
 }
 </style>
