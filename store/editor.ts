@@ -128,7 +128,7 @@ export const useEditorStore = defineStore("editor", {
         throw new Error("未找到该航空器");
       }
     },
-    // 含
+    // 含 moveUuid
     GetAircraftMovesBefore(aircraftUuid: string, moveUuid: string): EditorAircraftMoveStatus[] {
       const aircraft = this.get(aircraftUuid);
       if (aircraft) {
@@ -171,13 +171,23 @@ export const useEditorStore = defineStore("editor", {
         throw new Error("未找到该航空器");
       }
     },
-    // 不含
+    // 不含 moveUuid
     GetAircraftMovesAfter(aircraftUuid: string, moveUuid: string): EditorAircraftMoveStatus[] {
       const aircraft = this.get(aircraftUuid);
       if (aircraft) {
         const index = aircraft.data.move.findIndex((move) => move.uuid === moveUuid);
         if (index === -1) throw new Error("未找到该移动");
         return aircraft.data.move.slice(index + 1);
+      } else {
+        throw new Error("未找到该航空器");
+      }
+    },
+    GetAircraftMovesAfterInclude(aircraftUuid: string, moveUuid: string): EditorAircraftMoveStatus[] {
+      const aircraft = this.get(aircraftUuid);
+      if (aircraft) {
+        const index = aircraft.data.move.findIndex((move) => move.uuid === moveUuid);
+        if (index === -1) throw new Error("未找到该移动");
+        return aircraft.data.move.slice(index);
       } else {
         throw new Error("未找到该航空器");
       }
@@ -189,7 +199,43 @@ export const useEditorStore = defineStore("editor", {
       } else {
         throw new Error("未找到该航空器");
       }
+    },
+    DeleteAircraftMove(aircraftUuid: string, moveUuid: string) {
+      const aircraft = this.get(aircraftUuid);
+      if (aircraft) {
+        const index = aircraft.data.move.findIndex((move) => move.uuid === moveUuid);
+        if (index === -1) throw new Error("未找到该移动");
+        aircraft.data.move.splice(index, 1);
+      } else {
+        throw new Error("未找到该航空器");
+      }
+    },
+    AircraftMoveUp(aircraftUuid: string, moveUuid: string) {
+      const aircraft = this.get(aircraftUuid);
+      if (aircraft) {
+        const index = aircraft.data.move.findIndex((move) => move.uuid === moveUuid);
+        if (index === -1) throw new Error("未找到该移动");
+        if (index === 0) throw new Error("已经是第一个了");
+        const tmp = aircraft.data.move[index - 1];
+        aircraft.data.move[index - 1] = aircraft.data.move[index];
+        aircraft.data.move[index] = tmp;
+      } else {
+        throw new Error("未找到该航空器");
+      }
+    },
+    SetTimelineMove(aircraftUuid: string, moveUuid: string | null) {
+      const aircraft = this.get(aircraftUuid);
+      if (aircraft) {
+        if (moveUuid) {
+          const move = this.GetAircraftMove(aircraftUuid, moveUuid);
+          if (!move) throw new Error("未找到该移动");
+          aircraft.data.timeline_move = move.uuid;
+        } else {
+          moveUuid = null;
+        }
+      } else {
+        throw new Error("未找到该航空器");
+      }
     }
-
   }
 })

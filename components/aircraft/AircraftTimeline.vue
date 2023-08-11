@@ -30,13 +30,13 @@ const data = computed(() => {
         if (move.do_task) {
           tmp.children!.push({
             label: move.task_type,
-            key: `${move.uuid}-task`
+            key: `${move.uuid},task`
           })
         }
         if (move.do_wait) {
           tmp.children!.push({
             label: '等待',
-            key: `${move.uuid}-wait`
+            key: `${move.uuid},wait`
           })
         }
         result.push(tmp);
@@ -78,12 +78,8 @@ const nodeProps = ({ option }: { option: TreeOption }) => {
 
 const dropdownOptions = [
   {
-    label: '前进到此',
-    key: 'forward',
-  },
-  {
-    label: '后退到此',
-    key: 'backward',
+    label: '推进到此',
+    key: 'here',
   }
 ]
 </script>

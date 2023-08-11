@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { NList, NListItem, NScrollbar, useDialog, NButtonGroup, NButton, NEmpty, NIcon, NThing, NModal, NCard, NSwitch, SelectOption, SelectGroupOption, NSelect, NInputNumber, NDivider } from 'naive-ui';
+import { NList, NListItem, useMessage, NScrollbar, useDialog, NButtonGroup, NButton, NEmpty, NIcon, NThing, NModal, NCard, NSwitch, SelectOption, SelectGroupOption, NSelect, NInputNumber, NDivider } from 'naive-ui';
 import { useEditorStore, EditorAircraftMoveTo, EditorAircraftMoveStatus } from '@/store/editor';
 import { usePositionStore } from '@/store/position';
 import { TaskType, useAircraftStore } from '@/store/aircraft';
-import { AirplaneOutline, TrashOutline, ArrowUp, ArrowDown } from '@vicons/ionicons5';
+import { AirplaneOutline, TrashOutline, ArrowUp, ArrowDown, SettingsOutline } from '@vicons/ionicons5';
 import { MoveHelper } from '@/utils/moveHelper';
+import { v4 as uuidv4 } from 'uuid';
 
 const dialog = useDialog();
+const message = useMessage();
 const editorStore = useEditorStore();
 const positionStore = usePositionStore();
 const aircraftStore = useAircraftStore();
@@ -84,67 +86,191 @@ const handleClear = () => {
     }
   })
 }
+const handleAddMove = () => {
+  addMoveTitle.value = '添加途径地点';
+  showAddMoveModalSuerButtonText.value = '添加';
+  showAddMoveModal.value = true;
+}
+const showAddMoveModalSuerButtonText = ref('添加')
+const addMoveCurrentMoveUuid = ref<string>('');
 const showAddMoveModal = ref(false);
 const addMoveSpecial = ref(false);
 const addMoveToString = ref<string | undefined>(undefined);
 const addMoveToLatitude = ref<number | undefined>(undefined);
 const addMoveToLongitude = ref<number | undefined>(undefined);
+const addMoveTitle = ref('添加途径地点');
 const handleAddMoveSure = () => {
-  if (addMoveSpecial.value) {
-    if (addMoveToLatitude.value === undefined || addMoveToLongitude.value === undefined) {
-      dialog.error({
-        title: '添加失败',
-        content: '经纬度不能为空',
-        positiveText: '确定'
-      })
-      return;
-    }
-    if (editorStore.GetMoveNumber(currentAircraft.value!.uuid) <= 0) {
-      dialog.error({
-        title: '添加失败',
-        content: '出发地点必须为机场',
-        positiveText: '确定'
-      })
-      return;
-    }
+  if (addMoveTitle.value === '添加途径地点') {
+    if (addMoveSpecial.value) {
+      if (addMoveToLatitude.value === undefined || addMoveToLongitude.value === undefined) {
+        dialog.error({
+          title: '添加失败',
+          content: '经纬度不能为空',
+          positiveText: '确定'
+        })
+        return;
+      }
+      if (editorStore.GetMoveNumber(currentAircraft.value!.uuid) <= 0) {
+        dialog.error({
+          title: '添加失败',
+          content: '出发地点必须为机场',
+          positiveText: '确定'
+        })
+        return;
+      }
 
-    editorStore.AddMove(currentAircraft.value!.uuid, {
-      latitude: addMoveToLatitude.value,
-      longitude: addMoveToLongitude.value
-    });
-    addMoveToLatitude.value = undefined;
-    addMoveToLongitude.value = undefined;
+      editorStore.AddMove(currentAircraft.value!.uuid, {
+        latitude: addMoveToLatitude.value,
+        longitude: addMoveToLongitude.value
+      });
+      addMoveToLatitude.value = undefined;
+      addMoveToLongitude.value = undefined;
+      addMoveSpecial.value = false;
+    } else {
+      if (addMoveToString.value === undefined) {
+        dialog.error({
+          title: '添加失败',
+          content: '地点不能为空',
+          positiveText: '确定'
+        })
+        return;
+      }
+      const position = positionStore.default.find((item) => item.name === addMoveToString.value);
+      if (position === undefined) {
+        dialog.error({
+          title: '添加失败',
+          content: `地点 ${addMoveToString.value} 不存在}`,
+          positiveText: '确定'
+        })
+        return;
+      }
+
+      if (editorStore.GetMoveNumber(editorStore.currentAircraftUuid!) <= 0 && position.type !== 'Airport') {
+        dialog.error({
+          title: '添加失败',
+          content: '出发地点必须为机场',
+          positiveText: '确定'
+        })
+        return;
+      }
+      editorStore.AddMove(editorStore.currentAircraftUuid!, addMoveToString.value);
+      addMoveToString.value = undefined;
+    }
+    showAddMoveModal.value = false;
   } else {
-    if (addMoveToString.value === undefined) {
+    const currentAircraft = editorStore.get(editorStore.currentAircraftUuid!);
+    const index = editorStore.GetAircraftMoveIndex(editorStore.currentAircraftUuid!, addMoveCurrentMoveUuid.value);
+    const currentMove = editorStore.GetAircraftMove(editorStore.currentAircraftUuid!, addMoveCurrentMoveUuid.value);
+    if (currentAircraft === undefined || index < 0 || currentMove === undefined) {
       dialog.error({
-        title: '添加失败',
-        content: '地点不能为空',
+        title: '错误',
+        content: '意料之外的错误，请稍后重试',
         positiveText: '确定'
       })
       return;
     }
-    const position = positionStore.default.find((item) => item.name === addMoveToString.value);
-    if (position === undefined) {
-      dialog.error({
-        title: '添加失败',
-        content: `地点 ${addMoveToString.value} 不存在}`,
-        positiveText: '确定'
+    if (addMoveSpecial.value) {
+      if (addMoveToLatitude.value === undefined || addMoveToLongitude.value === undefined) {
+        dialog.error({
+          title: '修改失败',
+          content: '经纬度不能为空',
+          positiveText: '确定'
+        })
+        return;
+      }
+      if (index === 0) {
+        dialog.error({
+          title: '修改失败',
+          content: '出发地点必须为机场',
+          positiveText: '确定'
+        })
+        return;
+      }
+    } else {
+      if (addMoveToString.value === undefined) {
+        dialog.error({
+          title: '修改失败',
+          content: '途径地点不能为空',
+          positiveText: '确定'
+        })
+        return;
+      }
+      const position = positionStore.getByName(addMoveToString.value);
+      if (position === undefined) {
+        dialog.error({
+          title: '修改失败',
+          content: '途径地点不存在',
+          positiveText: '确定'
+        })
+        return;
+      }
+      if (index === 0 && position.type !== 'Airport') {
+        dialog.error({
+          title: '修改失败',
+          content: '出发地点必须为机场',
+          positiveText: '确定'
+        })
+        return;
+      }
+    }
+
+    // 任务冲突检验
+    const checkedMoves = editorStore.GetAircraftMovesBefore(currentAircraft.uuid, currentMove.uuid);
+    checkedMoves.pop();
+    checkedMoves.push({
+      uuid: uuidv4(),
+      do_task: false,
+      do_wait: currentMove.do_wait,
+      wait_time: currentMove.do_wait ? currentMove.wait_time! : undefined,
+      to: addMoveSpecial.value ? {
+        longitude: addMoveToLongitude.value,
+        latitude: addMoveToLatitude.value
+      } as EditorAircraftMoveTo : addMoveToString.value!,
+    })
+    const afterMoves = editorStore.GetAircraftMovesAfter(currentAircraft.uuid, currentMove.uuid)
+
+    const checkedResult = MoveHelper.CheckMoveValid(currentAircraft.base, checkedMoves.concat(afterMoves));
+
+    if (checkedResult[0]) {
+      MoveHelper.DeleteMoveTask(currentMove);
+      currentMove.to = addMoveSpecial.value ? {
+        longitude: addMoveToLongitude.value!,
+        latitude: addMoveToLatitude.value!,
+      } as EditorAircraftMoveTo : addMoveToString.value!
+    } else {
+      dialog.warning({
+        title: '警告',
+        content: '修改后，后续任务存在冲突，是否继续修改并清空后续任务',
+        positiveText: '确定',
+        onPositiveClick() {
+          for (const m of afterMoves) {
+            MoveHelper.DeleteMoveTask(m);
+          }
+          MoveHelper.DeleteMoveTask(currentMove);
+          currentMove.to = addMoveSpecial.value ? {
+            longitude: addMoveToLongitude.value,
+            latitude: addMoveToLatitude.value
+          } as EditorAircraftMoveTo : addMoveToString.value!
+
+          message.info('修改成功');
+          addMoveToLatitude.value = undefined;
+          addMoveToLatitude.value = undefined;
+          addMoveToString.value = undefined;
+          addMoveSpecial.value = false;
+          showAddMoveModal.value = false;
+        },
+        negativeText: '取消'
       })
       return;
     }
 
-    if (editorStore.GetMoveNumber(currentAircraft.value!.uuid) <= 0 && position.type !== 'Airport') {
-      dialog.error({
-        title: '添加失败',
-        content: '出发地点必须为机场',
-        positiveText: '确定'
-      })
-      return;
-    }
-    editorStore.AddMove(currentAircraft.value!.uuid, addMoveToString.value);
+    message.info('修改成功');
+    addMoveToLatitude.value = undefined;
+    addMoveToLatitude.value = undefined;
     addMoveToString.value = undefined;
+    addMoveSpecial.value = false;
+    showAddMoveModal.value = false;
   }
-  showAddMoveModal.value = false;
 }
 
 /** 添加停留时间 */
@@ -201,6 +327,262 @@ const waitTime2String = (move: EditorAircraftMoveStatus): string => {
   } else {
     return '无停留时间';
   }
+}
+const handleMoveUp = (uuid: string) => {
+  const aircraft = editorStore.get(editorStore.currentAircraftUuid!);
+  if (aircraft === undefined) {
+    dialog.error({
+      title: '删除失败',
+      content: '未找到该航空器',
+      positiveText: '确定'
+    })
+    return;
+  }
+  const move = editorStore.GetAircraftMove(editorStore.currentAircraftUuid!, uuid);
+  if (move === undefined) {
+    dialog.error({
+      title: '删除失败',
+      content: '未找到该途径地点',
+      positiveText: '确定'
+    })
+    return;
+  }
+
+  const index = editorStore.GetAircraftMoveIndex(editorStore.currentAircraftUuid!, uuid);
+  if (index === 0) {
+    dialog.error({
+      title: '移动失败',
+      content: '该途径地点已经在最顶端',
+      positiveText: '确定'
+    })
+    return;
+  } else if (index === 1) {
+    if (typeof move.to === 'string') {
+      const position = positionStore.getByName(move.to);
+      if (position === undefined) {
+        dialog.error({
+          title: '移动失败',
+          content: '未找到该途径地点',
+          positiveText: '确定'
+        })
+        return;
+      }
+      if (position.type !== 'Airport') {
+        dialog.error({
+          title: '移动失败',
+          content: '出发地点必须为机场',
+          positiveText: '确定'
+        })
+        return;
+      }
+    } else {
+      dialog.error({
+        title: '移动失败',
+        content: '出发地点必须为机场',
+        positiveText: '确定'
+      })
+      return;
+    }
+  }
+
+  const moves = editorStore.GetAircraftMoves(editorStore.currentAircraftUuid!);
+  const beforeUuid = moves[index - 1].uuid;
+  MoveHelper.Swap(moves, index, index - 1);
+  const result = MoveHelper.CheckMoveValid(aircraft.base, moves);
+  if (result[0]) {
+    message.info('移动成功');
+    return;
+  } else {
+    MoveHelper.Swap(moves, index, index - 1);
+    dialog.error({
+      title: '移动失败',
+      content: '移动后会发生人物冲突，是否清空任务',
+      positiveText: '确定',
+      onPositiveClick: () => {
+        const tmp_moves = editorStore.GetAircraftMovesAfterInclude(editorStore.currentAircraftUuid!, beforeUuid);
+        tmp_moves.forEach((item) => {
+          MoveHelper.DeleteMoveTask(item);
+        })
+        MoveHelper.Swap(moves, index, index - 1);
+        message.info('移动成功');
+      },
+      negativeText: '取消',
+    })
+  }
+}
+
+const handleMoveDown = (uuid: string) => {
+  const aircraft = editorStore.get(editorStore.currentAircraftUuid!);
+  if (aircraft === undefined) {
+    dialog.error({
+      title: '删除失败',
+      content: '未找到该航空器',
+      positiveText: '确定'
+    })
+    return;
+  }
+  const move = editorStore.GetAircraftMove(editorStore.currentAircraftUuid!, uuid);
+  if (move === undefined) {
+    dialog.error({
+      title: '删除失败',
+      content: '未找到该途径地点',
+      positiveText: '确定'
+    })
+    return;
+  }
+
+  const index = editorStore.GetAircraftMoveIndex(editorStore.currentAircraftUuid!, uuid);
+  const length = editorStore.GetMoveNumber(editorStore.currentAircraftUuid!);
+  const moves = editorStore.GetAircraftMoves(editorStore.currentAircraftUuid!);
+
+  if (index === length - 1) {
+    dialog.error({
+      title: '移动失败',
+      content: '该途径地点已经在最底端',
+      positiveText: '确定'
+    })
+    return;
+  } else if (index === 0) {
+    const next_move = moves[index + 1];
+    if (typeof next_move.to === 'string') {
+      const position = positionStore.getByName(next_move.to);
+      if (position === undefined) {
+        dialog.error({
+          title: '移动失败',
+          content: '未找到该途径地点',
+          positiveText: '确定'
+        })
+        return;
+      }
+      if (position.type !== 'Airport') {
+        dialog.error({
+          title: '移动失败',
+          content: '出发地点必须为机场',
+          positiveText: '确定'
+        })
+        return;
+      }
+    } else {
+      dialog.error({
+        title: '移动失败',
+        content: '出发地点必须为机场',
+        positiveText: '确定'
+      })
+      return;
+    }
+  }
+
+  // const afterUuid = moves[index + 1].uuid;
+  MoveHelper.Swap(moves, index, index + 1);
+  const result = MoveHelper.CheckMoveValid(aircraft.base, moves);
+  if (result[0]) {
+    message.info('移动成功');
+    return;
+  } else {
+    MoveHelper.Swap(moves, index, index + 1);
+    dialog.error({
+      title: '移动失败',
+      content: '移动后会发生人物冲突，是否清空任务',
+      positiveText: '确定',
+      onPositiveClick: () => {
+        const tmp_moves = editorStore.GetAircraftMovesAfterInclude(editorStore.currentAircraftUuid!, uuid);
+        tmp_moves.forEach((item) => {
+          MoveHelper.DeleteMoveTask(item);
+        })
+        MoveHelper.Swap(moves, index, index + 1);
+        message.info('移动成功');
+      },
+      negativeText: '取消',
+    })
+  }
+}
+
+const handleMoveDelete = (uuid: string) => {
+  const aircraft = editorStore.get(editorStore.currentAircraftUuid!);
+  if (aircraft === undefined) {
+    dialog.error({
+      title: '删除失败',
+      content: '未找到该航空器',
+      positiveText: '确定'
+    })
+    return;
+  }
+  const move = editorStore.GetAircraftMove(editorStore.currentAircraftUuid!, uuid);
+  if (move === undefined) {
+    dialog.error({
+      title: '删除失败',
+      content: '未找到该途径地点',
+      positiveText: '确定'
+    })
+    return;
+  }
+
+  if (editorStore.GetAircraftMoveIndex(editorStore.currentAircraftUuid!, uuid) === 0) {
+    dialog.error({
+      title: '删除失败',
+      content: '出发地点不能删除，请尝试修改出发地点',
+      positiveText: '确定'
+    })
+    return;
+  }
+
+  // 验证任务合法性
+  const moves = editorStore.GetAircraftMoves(editorStore.currentAircraftUuid!).filter((item) => item.uuid !== uuid);
+  const result = MoveHelper.CheckMoveValid(aircraft.base, moves);
+  if (result[0]) {
+    editorStore.DeleteAircraftMove(editorStore.currentAircraftUuid!, uuid);
+    message.info('删除成功');
+  } else {
+    dialog.warning({
+      title: '警告',
+      content: '删除后后续任务存在冲突，是否清空后续任务',
+      positiveText: '确定',
+      onPositiveClick() {
+        const afterMoves = editorStore.GetAircraftMovesAfter(editorStore.currentAircraftUuid!, uuid);
+        afterMoves.forEach((item) => {
+          MoveHelper.DeleteMoveTask(item);
+        })
+        editorStore.DeleteAircraftMove(editorStore.currentAircraftUuid!, uuid);
+        message.info('删除成功');
+      },
+      negativeText: '取消'
+    })
+  }
+}
+const handleMoveChange = (uuid: string) => {
+  addMoveTitle.value = '修改途径地点';
+  showAddMoveModalSuerButtonText.value = '修改';
+
+  const move = editorStore.GetAircraftMove(editorStore.currentAircraftUuid!, uuid);
+  if (move === undefined) {
+    dialog.error({
+      title: '修改失败',
+      content: '未找到该途径地点',
+      positiveText: '确定'
+    })
+    return;
+  }
+
+  if (typeof move.to === 'string') {
+    const position = positionStore.getByName(move.to);
+    if (position === undefined) {
+      dialog.error({
+        title: '修改失败',
+        content: '未找到该途径地点',
+        positiveText: '确定'
+      })
+      return;
+    }
+    addMoveSpecial.value = false;
+    addMoveToString.value = position.name;
+  } else {
+    addMoveSpecial.value = true;
+    addMoveToLatitude.value = move.to.latitude;
+    addMoveToLongitude.value = move.to.longitude;
+  }
+
+  addMoveCurrentMoveUuid.value = uuid;
+  showAddMoveModal.value = true;
 }
 
 /** 添加任务 */
@@ -331,8 +713,9 @@ const addTaskDataTip = computed(() => {
       return '请输入数据：'
   }
 })
-const taskSuffix = computed(() => {
-  switch (addTaskSelectValue.value) {
+
+const CalTasksuffix = (tasktype: TaskType) => {
+  switch (tasktype) {
     case '装载':
     case '卸货':
       return 'kg';
@@ -357,7 +740,8 @@ const taskSuffix = computed(() => {
     default:
       return undefined;
   }
-})
+}
+const taskSuffix = computed(() => CalTasksuffix(addTaskSelectValue.value as TaskType))
 const addTaskValueMax = computed(() => {
   if (addTaskSelectValue.value === undefined) {
     return 0;
@@ -419,7 +803,18 @@ const addTaskShowAddition = computed(() => {
 })
 const addTaskAddition = ref<number>(0);
 // handler
+const handleChangeTask = (uuid: string) => {
+  addTaskTitle.value = '修改任务';
+  const move = editorStore.GetAircraftMove(editorStore.currentAircraftUuid!, uuid);
+  addTaskSelectValue.value = move?.task_type
+  addTaskAddition.value = move?.task_addition || 0;
+  addTaskSelectOptions.value = generateTasks(uuid);
+  addTaskCurrentMoveUuid.value = uuid;
+  showAddTaskModal.value = true;
+}
+
 const handleAddTask = (uuid: string, e: MouseEvent) => {
+  addTaskTitle.value = '添加任务';
   addTaskSelectValue.value = undefined;
   addTaskSelectOptions.value = generateTasks(uuid);
   addTaskCurrentMoveUuid.value = uuid;
@@ -483,7 +878,6 @@ const addTaskModalSure = () => {
     currentMove.do_task = false;
     return;
   }
-  // TODO: 之后的任务冲突检查
   const lastMove = editorStore.GetAircraftLastMove(currentAircraft.uuid);
   if (lastMove === undefined) {
     dialog.error({
@@ -547,7 +941,7 @@ const addTaskModalSure = () => {
           </div>
           <NButtonGroup>
             <NButton type="error" @click="handleClear">清空</NButton>
-            <NButton type="primary" @click="showAddMoveModal = true;">添加</NButton>
+            <NButton type="primary" @click="handleAddMove">添加</NButton>
           </NButtonGroup>
         </div>
       </template>
@@ -555,10 +949,15 @@ const addTaskModalSure = () => {
         <NListItem v-for="(move, index) in currentAircraft.data.move" :key="currentAircraft.uuid">
           <NThing :title="moveTo2String(move.to)">
             <div v-if="(typeof move.to === 'string')" style="display: inline-block;">
-              <div v-if="move.do_task" style="display: inline-block;">
-                {{ move.task_type }}
-                {{ move.task_addition }}
-              </div>
+              <NButton quaternary v-if="move.do_task" @click="handleChangeTask(move.uuid)">
+                <span>
+                  {{ move.task_type }}
+                </span>
+                <span v-if="move.task_type !== '加油保障'" style="margin-left: 4px;">
+                  {{ move.task_addition }}
+                  {{ CalTasksuffix(move.task_type!) }}
+                </span>
+              </NButton>
               <NButton v-else quaternary type="info" @click="(e) => handleAddTask(move.uuid, e)">
                 添加任务
               </NButton>
@@ -573,21 +972,28 @@ const addTaskModalSure = () => {
           </template>
           <template #suffix>
             <NButtonGroup>
-              <NButton type="primary" ghost>
+              <NButton type="primary" ghost @click="handleMoveUp(move.uuid)">
                 <template #icon>
                   <NIcon>
                     <ArrowUp />
                   </NIcon>
                 </template>
               </NButton>
-              <NButton type="primary" ghost>
+              <NButton type="primary" ghost @click="handleMoveDown(move.uuid)">
                 <template #icon>
                   <NIcon>
                     <ArrowDown />
                   </NIcon>
                 </template>
               </NButton>
-              <NButton type="error" ghost>
+              <NButton type="warning" ghost @click="handleMoveChange(move.uuid)">
+                <template #icon>
+                  <NIcon>
+                    <SettingsOutline />
+                  </NIcon>
+                </template>
+              </NButton>
+              <NButton type="error" ghost @click="handleMoveDelete(move.uuid)">
                 <template #icon>
                   <NIcon>
                     <TrashOutline />
@@ -603,7 +1009,7 @@ const addTaskModalSure = () => {
 
   <!-- 添加途径地点 -->
   <NModal v-model:show="showAddMoveModal">
-    <NCard title="添加途径地点" class="m-card">
+    <NCard :title="addMoveTitle" class="m-card">
       <div class="m-box">
         <div style="margin-bottom: 6px;">
           自定义地点：
@@ -625,7 +1031,7 @@ const addTaskModalSure = () => {
       <div class="m-box m-tright">
         <NButtonGroup>
           <NButton @click="showAddMoveModal = false;">取消</NButton>
-          <NButton type="primary" @click="handleAddMoveSure">添加</NButton>
+          <NButton type="primary" @click="handleAddMoveSure">{{ showAddMoveModalSuerButtonText }}</NButton>
         </NButtonGroup>
       </div>
     </NCard>

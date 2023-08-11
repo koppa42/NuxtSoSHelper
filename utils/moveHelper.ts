@@ -32,7 +32,7 @@ export namespace MoveHelper {
       }
     }
 
-    console.log(move)
+    // console.log(move)
     let idx = 0;
     for (const m of move) {
       // console.log(m.to, idx)
@@ -204,6 +204,20 @@ export namespace MoveHelper {
       idx++;
     }
     return [true, status]
+  }
+
+  export function DeleteMoveTask(...moves: EditorAircraftMoveStatus[]) {
+    moves.forEach(m => {
+      m.task_addition = undefined;
+      m.task_type = undefined;
+      m.do_task = false;
+    })
+  }
+
+  export function Swap<T>(lst: T[], idx1: number, idx2: number) {
+    let tmp = lst[idx1];
+    lst[idx1] = lst[idx2];
+    lst[idx2] = tmp;
   }
 
   // export function GenerateStatusAfterMoves(aircraft: Aircraft, move: EditorAircraftMoveStatus[]): EditorAircraftStatus {
